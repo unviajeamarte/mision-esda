@@ -134,6 +134,20 @@
             letter-spacing: 2px;
             text-transform: uppercase;
             font-weight: 500;
+            margin-bottom: 10px;
+        }
+
+        /* Descripción inspirada en Diseñafest'26 */
+        .hud-description {
+            font-family: 'Nunito', sans-serif;
+            font-size: 0.95rem;
+            color: var(--color-text-secondary);
+            max-width: 650px;
+            margin: 15px auto 0 auto;
+            line-height: 1.6;
+            font-weight: 300;
+            text-transform: lowercase; /* Fuerza el formato en minúsculas solicitado */
+            opacity: 0.9;
         }
 
         /* Botón inmersivo de retorno (Nave Espacial HUD despegando) */
@@ -577,7 +591,7 @@
 </head>
 <body>
 
-    <!-- Canvas de soporte para el fondo de gas dinámico -->
+    <!-- Canvas de soporte para el fondo de gas dinámico (tormenta atmosférica) -->
     <canvas id="gas-background"></canvas>
 
     <!-- Cabecera HUD -->
@@ -592,8 +606,11 @@
         <p class="hud-subtitle">Misión de Reconocimiento a Marte</p>
         <h1>Galería de Proyectos</h1>
         <div class="hud-line"></div>
-        <p class="edition-tag">Trabajos Realizados en Blender por los Alumnos de 2º de Diseño gráfico</p>
-        <p class="edition-tag">A raiz del concepto del Diseñafest'26, se les propone a los alumnos recrear una escena en Marte. Se les da libertad creativa y el resultado tiene que ser un pequeño teaser promocional del festival</p>
+        <p class="edition-tag">Trabajos Realizados por los Alumnos de 2º de Diseño Gráfico</p>
+        
+        <!-- Descripción del proyecto añadida en minúsculas -->
+        <p class="hud-description">Inspirados en el concepto del Diseñafest’26, se invita a los alumnos a recrear una escena en marte. Con total libertad creativa, y después de todo el desarrollo del proyecto en Blender, deberán elaborar un breve teaser promocional del festival.</p>
+
         <!-- Retorno al Index 3D (Botón circular con icono de nave despegando) -->
         <a href="index.html" class="btn-return" id="btn-back" title="Volver a la Nave / Landing">
             <svg class="spaceship-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -641,7 +658,7 @@
     <!-- SCRIPT DE EFECTOS VISUALES Y SONOROS (WEB AUDIO API) -->
     <script>
         // --- 1. BANCO DE DATOS DE LOS 30 PROYECTOS CON TU NUEVO ID EN EL PROYECTO 1 ---
-        const proyectos = [
+           const proyectos = [
             { id: 1, student: "Alejandro Bellosta", title: "Sonda Robotizada de Superficie", desc: "Modelado industrial (Hard-Surface) y ensamblado mecánico de un vehículo robotizado autónomo de exploración. Animación por armadura (rigging) para el comportamiento de las orugas articuladas.", class: "2º DG", group: "Grupo B", videoId: "1oi6maskOayEdoypr17dYPJaWJ242s_3R" },
             { id: 2, student: "Ana María Cojocaru", title: "Invernadero Hidropónico Autosuficiente", desc: "Propuesta arquitectónica de domos geodésicos translúcidos para el cultivo y soporte vital de la primera colonia. Destaca por el tratamiento de sombreadores y materiales de cristal orgánico.", class: "2º DG", group: "Grupo A", videoId: "1_o3rRorMyD7v9B7T3U66y78" },
             { id: 3, student: "Aitana García", title: "Módulo de Aterrizaje Atmosférico", desc: "Reconstrucción tridimensional de un transbordador de descenso tripulado. Se ha desarrollado una física de partículas para simular el fuego de propulsión de los retrocohetes térmicos.", class: "2º DG", group: "Grupo B", videoId: "1_o3rRorMyD7v9B7T3U66y78" },
@@ -792,7 +809,7 @@
         drawGas();
 
 
-        // --- 4. CONTROLADOR DEL MODAL CINEMÁTICO DE REPRODUCCIÓN ---
+        // --- 4. REPRODUCTOR DE EXPANSIÓN A MEDIA PANTALLA ---
         const modal = document.getElementById('video-modal');
         const modalIframe = document.getElementById('modal-iframe');
         const modalTitle = document.getElementById('modal-title');
@@ -920,4 +937,4 @@
         window.addEventListener('keydown', resumeAudio);
     </script>
 </body>
-</ht
+</html>
