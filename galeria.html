@@ -149,7 +149,7 @@
             opacity: 0.9;
         }
 
-        /* Botón inmersivo de retorno (Nave Espacial HUD despegando) */
+        /* Botón inmersivo de retorno */
         .btn-return {
             display: inline-flex;
             align-items: center;
@@ -168,7 +168,7 @@
             background: var(--color-mars);
             color: #010103;
             box-shadow: 0 0 15px var(--color-mars-glow);
-            transform: translateY(-4px) scale(1.05); /* Ascenso sutilmente mayor para simular el impulso */
+            transform: translateY(-4px) scale(1.05);
         }
 
         /* Icono de la nave espacial despegando */
@@ -179,7 +179,7 @@
         }
 
         .btn-return:hover .spaceship-nav-icon {
-            transform: translateY(-2px); /* Pequeño desplazamiento dinámico hacia arriba */
+            transform: translateY(-2px);
         }
 
         /* --- GRID PRINCIPAL EN DOS COLUMNAS --- */
@@ -195,14 +195,14 @@
 
         .gallery-grid {
             display: grid;
-            grid-template-columns: repeat(2, 1fr); /* Estructura fija a dos columnas */
+            grid-template-columns: repeat(2, 1fr); 
             gap: 40px;
         }
 
         /* Adaptabilidad a dispositivos de menor tamaño */
         @media (max-width: 1000px) {
             .gallery-grid {
-                grid-template-columns: 1fr; /* Pasa a una columna */
+                grid-template-columns: 1fr; 
                 gap: 30px;
             }
         }
@@ -262,15 +262,12 @@
             height: 20px;
         }
 
-        /* --- CONTENEDOR DE VISTA PREVIA CON MINIATURA DE GOOGLE DRIVE --- */
+        /* --- CONTENEDOR DE VISTA PREVIA MULTICAPA --- */
         .video-box {
             position: relative;
             width: 100%;
             padding-top: 56.25%; /* Relación de aspecto 16:9 */
             background-color: #0b0507;
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
             border-radius: 6px;
             overflow: hidden;
             margin-bottom: 20px;
@@ -282,24 +279,93 @@
             transition: border-color 0.3s ease, box-shadow 0.3s ease;
         }
 
-        /* Suave zoom out e iluminación de la miniatura al hacer hover */
-        .video-box::before {
-            content: '';
+        /* Capa 1: El fondo de calibración HUD que se revela si el thumbnail es negro */
+        .hud-blueprint-fallback {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: inherit;
-            background-size: cover;
-            background-position: center;
-            transition: transform 0.5s ease, filter 0.3s ease;
             z-index: 0;
+            background: radial-gradient(circle at center, #1a080a 0%, #060203 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            pointer-events: none;
         }
 
-        .video-box:hover::before {
-            transform: scale(1.06);
-            filter: brightness(1.1);
+        .hud-scanning-line {
+            position: absolute;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--color-mars), transparent);
+            top: 0;
+            animation: scanLine 4s infinite linear;
+            opacity: 0.25;
+        }
+
+        @keyframes scanLine {
+            0% { top: 0%; }
+            100% { top: 100%; }
+        }
+
+        .hud-radar-svg {
+            position: absolute;
+            width: 45%;
+            height: 45%;
+            animation: rotateRadar 20s infinite linear;
+            opacity: 0.4;
+            filter: drop-shadow(0 0 4px var(--color-mars-glow));
+        }
+
+        @keyframes rotateRadar {
+            100% { transform: rotate(360deg); }
+        }
+
+        .hud-radar-text {
+            position: absolute;
+            bottom: 15px;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 8px;
+            color: rgba(255, 85, 51, 0.5);
+            letter-spacing: 2px;
+            font-weight: 700;
+        }
+
+        /* Capa 2: Miniatura cargada de Google Drive */
+        .video-thumbnail {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            z-index: 1;
+            transition: transform 0.5s ease, opacity 0.3s ease;
+            /* CLAVE: Mezcla de color para que los pixeles negros se vuelvan totalmente transparentes */
+            mix-blend-mode: screen; 
+            opacity: 0.85;
+        }
+
+        /* Capa 3: Iframe dinámico que se cargará solo en hover */
+        .hover-iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: 0;
+            z-index: 5;
+            pointer-events: none; /* Permite clickar para abrir modal */
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .hover-iframe.loaded {
+            opacity: 1;
         }
 
         /* Rejilla técnica de fondo en el placeholder */
@@ -314,7 +380,7 @@
                 linear-gradient(90deg, rgba(255, 85, 51, 0.08) 1px, transparent 1px);
             background-size: 20px 20px;
             background-position: center;
-            z-index: 1;
+            z-index: 2;
             pointer-events: none;
         }
 
@@ -327,7 +393,7 @@
             border-radius: 4px;
             top: 16%;
             left: 8%;
-            z-index: 1;
+            z-index: 2;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -375,8 +441,8 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            transition: background 0.3s ease;
-            z-index: 2;
+            transition: background 0.3s ease, opacity 0.3s ease;
+            z-index: 3;
         }
 
         .video-box:hover .video-overlay {
@@ -394,7 +460,7 @@
             align-items: center;
             box-shadow: 0 0 15px var(--color-mars-glow);
             transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), background-color 0.3s ease;
-            z-index: 3;
+            z-index: 4;
         }
 
         .play-button svg {
@@ -607,13 +673,13 @@
             font-size: 0.85rem;
             color: #6a7c91;
             letter-spacing: 3px;
-            font-weight: 400; /* No está en negrita, manteniendo un estilo sofisticado */
+            font-weight: 400; 
         }
 
         footer p span {
             color: var(--color-mars);
             text-shadow: 0 0 10px var(--color-mars-glow);
-            font-weight: 400; /* Tampoco en negrita en el span */
+            font-weight: 400; 
         }
     </style>
 </head>
@@ -636,21 +702,16 @@
         <div class="hud-line"></div>
         <p class="edition-tag"> 2º de Diseño Gráfico | 25-26</p>
         
-        <!-- Descripción del proyecto añadida en minúsculas -->
-        <p class="hud-description">Desde la asignatura de Medios Informáticos II, inspirados en el concepto del DiseñaFest’26, se propone a los alumnos imaginar una escena en Marte. Con total libertad creativa, en cuanto a lo que ven y cómo lo muestran, y después de todo el desarrollo del proyecto (ADD) en Blender, diseñarán un breve teaser promocional del Festival.</p>
+        <p class="hud-description">Desde la asignatura de Medios Informáticos II, e inspirados en el concepto del DiseñaFest’26, se invita a los alumnos a recrear una escena en Marte. Con total libertad creativa, y después de todo el desarrollo del proyecto (ADD) en Blender, diseñarán un breve teaser promocional del festival. Aquí se puede ver una muestra.</p>
 
-        <!-- Retorno al Index 3D (Botón circular con icono de nave despegando) -->
+        <!-- Retorno al Index 3D -->
         <a href="index.html" class="btn-return" id="btn-back" title="Volver a la Nave / Landing">
             <svg class="spaceship-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <!-- Cuerpo y fuselaje aerodinámico de la nave apuntando arriba -->
                 <path d="M12 2s-5 4-5 10c0 1.5 1 2.5 2 3h6c1-0.5 2-1.5 2-3 0-6-5-10-5-10z" />
-                <!-- Alerones estabilizadores laterales -->
                 <path d="M9 15l-3 2v-4" />
                 <path d="M15 15l3 2v-4" />
-                <!-- Estela / Fuego de propulsión vertical del cohete -->
                 <path d="M12 17v5" />
                 <path d="M10 18.5l2 3.5 2-3.5" />
-                <!-- Ojo/Ventana de navegación HUD -->
                 <circle cx="12" cy="8" r="1.5" fill="currentColor"/>
             </svg>
         </a>
@@ -668,7 +729,6 @@
         <div class="modal-content">
             <button class="modal-close" id="modal-close">Cerrar [X]</button>
             <div class="modal-video-wrapper">
-                <!-- Iframe dinámico para reproducir el reproductor nativo de Google Drive libre de restricciones -->
                 <iframe id="modal-iframe" allow="autoplay; encrypted-media" allowfullscreen></iframe>
             </div>
             <div class="modal-info-box">
@@ -719,10 +779,25 @@
         proyectos.forEach(p => {
             const card = document.createElement('section');
             card.className = 'project-card';
-            // Inyectamos la miniatura como propiedad background-image inline en .video-box de forma dinámica
+            // CLAVE 1: Añadimos un fondo de telemetría HUD SVG (radar y ondas) que actúa de fallback detrás de la imagen.
+            // CLAVE 2: Aplicamos 'mix-blend-mode: screen' a la miniatura de Google Drive. Así, si la miniatura es negra (como la de Eva Ayuda),
+            // el negro se vuelve invisible y el glowing radar de abajo brilla a través, simulando una consola interactiva en standby.
             card.innerHTML = `
                 <div>
-                    <div class="video-box" style="background-image: url('https://drive.google.com/thumbnail?id=${p.videoId}&sz=w600');">
+                    <div class="video-box" data-video-id="${p.videoId}">
+                        <!-- Fallback HUD que brilla a través de los pixeles negros -->
+                        <div class="hud-blueprint-fallback">
+                            <div class="hud-scanning-line"></div>
+                            <svg class="hud-radar-svg" viewBox="0 0 100 100">
+                                <circle cx="50" cy="50" r="40" stroke="rgba(255, 85, 51, 0.25)" stroke-width="0.5" fill="none" stroke-dasharray="3 3"/>
+                                <circle cx="50" cy="50" r="22" stroke="rgba(255, 85, 51, 0.4)" stroke-width="0.5" fill="none"/>
+                                <line x1="50" y1="5" x2="50" y2="95" stroke="rgba(255, 85, 51, 0.15)" stroke-width="0.3" stroke-dasharray="2 2"/>
+                                <line x1="5" y1="50" x2="95" y2="50" stroke="rgba(255, 85, 51, 0.15)" stroke-width="0.3" stroke-dasharray="2 2"/>
+                                <polygon points="50,15 85,50 50,85 15,50" stroke="rgba(255, 85, 51, 0.12)" stroke-width="0.3" fill="none"/>
+                            </svg>
+                            <div class="hud-radar-text">TELEMETRY_STANDBY // SEC_02</div>
+                        </div>
+                        <div class="video-thumbnail" style="background-image: url('https://drive.google.com/thumbnail?id=${p.videoId}&sz=w600');"></div>
                         <div class="video-box-grid"></div>
                         <div class="hud-telemetry-decor"></div>
                         <div class="video-overlay">
@@ -744,6 +819,42 @@
             `;
 
             const videoBox = card.querySelector('.video-box');
+
+            // CLAVE 3: Al pasar el ratón por encima, inyectamos dinámicamente un iframe de Google Drive
+            // configurado con '?autoplay=1&mute=1&t=2s' para que arranque directamente en el segundo 2 de forma fluida.
+            // Al retirar el ratón, se destruye el iframe para liberar rendimiento.
+            videoBox.addEventListener('mouseenter', () => {
+                // Eliminar iframes previos si existieran por seguridad
+                const prevIframe = videoBox.querySelector('.hover-iframe');
+                if (prevIframe) prevIframe.remove();
+
+                const iframe = document.createElement('iframe');
+                iframe.className = 'hover-iframe';
+                // Forzamos el segundo 2 (t=2s), autoplay, silencio para evitar bloqueos del navegador, y forzamos calidad 1080p
+                iframe.src = `https://drive.google.com/file/d/${p.videoId}/preview?autoplay=1&mute=1&t=2s&vq=hd1080&hd=1`;
+                
+                iframe.onload = () => {
+                    iframe.classList.add('loaded');
+                };
+
+                videoBox.appendChild(iframe);
+
+                // Ocultar play button y telemetría de portada de forma cinemática mientras se reproduce
+                const overlay = videoBox.querySelector('.video-overlay');
+                const decor = videoBox.querySelector('.hud-telemetry-decor');
+                if (overlay) overlay.style.opacity = '0';
+                if (decor) decor.style.opacity = '0';
+            });
+
+            videoBox.addEventListener('mouseleave', () => {
+                const iframe = videoBox.querySelector('.hover-iframe');
+                if (iframe) iframe.remove();
+
+                const overlay = videoBox.querySelector('.video-overlay');
+                const decor = videoBox.querySelector('.hud-telemetry-decor');
+                if (overlay) overlay.style.opacity = '1';
+                if (decor) decor.style.opacity = '1';
+            });
 
             // --- LISTENERS MEJORADOS PARA INTERACCIONES DE SONIDO SUTILES ---
             card.addEventListener('mouseenter', () => {
@@ -769,12 +880,12 @@
 
         // --- 3. FONDO DE GAS DE ATERRIZAJE FLUIDO Y DESTELLOS ASCENDENTES (CANVAS 2D) ---
         const canvas = document.getElementById('gas-background');
-        const ctx = canvas.getContext('2d');
+        const canvasCtx = canvas.getContext('2d');
 
         let gasClouds = [];
-        let sparks = []; // Array para los nuevos destellos o chispas
+        let sparks = []; 
         const numClouds = 26; 
-        const maxSparks = 60; // Cantidad máxima de destellos flotando de forma simultánea
+        const maxSparks = 60; 
 
         function resizeCanvas() {
             canvas.width = window.innerWidth;
@@ -785,7 +896,6 @@
         function initGas() {
             gasClouds = [];
             sparks = [];
-            // Inicializar las nubes gaseosas
             for (let i = 0; i < numClouds; i++) {
                 gasClouds.push({
                     x: Math.random() * canvas.width,
@@ -797,63 +907,54 @@
                     color: Math.random() > 0.4 ? 'rgba(235, 110, 50, ' : 'rgba(215, 80, 30, '
                 });
             }
-            // Generar destellos iniciales
             for (let i = 0; i < maxSparks; i++) {
                 createSpark(true);
             }
         }
 
-        // Crear una chispa o destello dinámico con escalas exponenciales para simular profundidad (No uniformes)
         function createSpark(randomY = false) {
-            // Curva exponencial (cúbica) para que haya muchos muy diminutos al fondo y pocos grandes en primer plano
             const size = 0.3 + Math.pow(Math.random(), 3.5) * 4.2;
             sparks.push({
                 x: Math.random() * canvas.width,
-                // Si es al inicio, se reparten por toda la pantalla. Si no, nacen de la nube abajo
                 y: randomY ? Math.random() * canvas.height : canvas.height + 10 + Math.random() * 30,
                 size: size,
                 alpha: 0.1 + Math.random() * 0.8,
                 fadeSpeed: 0.001 + Math.random() * 0.005,
-                speedY: -(0.3 + (4.5 - size) * 0.15 + Math.random() * 0.4), // Sensación de paralaje por velocidad inversa al tamaño
-                speedX: (Math.random() - 0.5) * 0.3, // Suave oscilación lateral
-                pulseSpeed: 0.03 + Math.random() * 0.07, // Velocidad de parpadeo (brillo)
+                speedY: -(0.3 + (4.5 - size) * 0.15 + Math.random() * 0.4), 
+                speedX: (Math.random() - 0.5) * 0.3, 
+                pulseSpeed: 0.03 + Math.random() * 0.07, 
                 pulseDir: Math.random() > 0.5 ? 1 : -1,
-                color: Math.random() > 0.25 ? 'rgba(255, 85, 51, ' : 'rgba(255, 180, 110, ' // Naranjas y dorados
+                color: Math.random() > 0.25 ? 'rgba(255, 85, 51, ' : 'rgba(255, 180, 110, ' 
             });
         }
 
         function drawGas() {
-            // Fondo oscuro base
-            ctx.fillStyle = '#060204'; 
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            canvasCtx.fillStyle = '#060204'; 
+            canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // Gradiente ambiental marciano sutil desde el fondo
-            const baseGrad = ctx.createLinearGradient(0, canvas.height, 0, 0);
+            const baseGrad = canvasCtx.createLinearGradient(0, canvas.height, 0, 0);
             baseGrad.addColorStop(0, 'rgba(180, 55, 20, 0.15)');
             baseGrad.addColorStop(0.5, 'rgba(235, 110, 50, 0.05)');
             baseGrad.addColorStop(1, 'transparent');
-            ctx.fillStyle = baseGrad;
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            canvasCtx.fillStyle = baseGrad;
+            canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // 1. Renderizar nubes gaseosas flotantes
             for (let i = 0; i < gasClouds.length; i++) {
                 const gc = gasClouds[i];
                 
-                const grad = ctx.createRadialGradient(gc.x, gc.y, 0, gc.x, gc.y, gc.radius);
+                const grad = canvasCtx.createRadialGradient(gc.x, gc.y, 0, gc.x, gc.y, gc.radius);
                 grad.addColorStop(0, `${gc.color}${gc.opacity})`);
                 grad.addColorStop(0.4, `${gc.color}${gc.opacity * 0.45})`);
                 grad.addColorStop(1, 'rgba(0,0,0,0)');
 
-                ctx.fillStyle = grad;
-                ctx.beginPath();
-                ctx.arc(gc.x, gc.y, gc.radius, 0, Math.PI * 2);
-                ctx.fill();
+                canvasCtx.fillStyle = grad;
+                canvasCtx.beginPath();
+                canvasCtx.arc(gc.x, gc.y, gc.radius, 0, Math.PI * 2);
+                canvasCtx.fill();
 
-                // Actualizar posiciones de las nubes gaseosas
                 gc.y += gc.speedY;
                 gc.x += gc.speedX;
 
-                // Reutilizar nubes que salen por la parte superior
                 if (gc.y + gc.radius < 0) {
                     gc.y = canvas.height + gc.radius;
                     gc.x = Math.random() * canvas.width;
@@ -862,24 +963,20 @@
                 }
             }
 
-            // 2. Renderizar y actualizar pequeños destellos flotantes (chispas)
             for (let i = sparks.length - 1; i >= 0; i--) {
                 const s = sparks[i];
 
-                // Dibujar destello individual (pequeño círculo brillante con halo sutil)
-                ctx.beginPath();
-                ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
-                ctx.fillStyle = `${s.color}${s.alpha})`;
-                ctx.shadowColor = '#ff5533';
-                ctx.shadowBlur = s.size * 2.5; // Brillo HUD de plasma proporcional al tamaño
-                ctx.fill();
-                ctx.shadowBlur = 0; // Resetear sombra para optimización
+                canvasCtx.beginPath();
+                canvasCtx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+                canvasCtx.fillStyle = `${s.color}${s.alpha})`;
+                canvasCtx.shadowColor = '#ff5533';
+                canvasCtx.shadowBlur = s.size * 2.5; 
+                canvasCtx.fill();
+                canvasCtx.shadowBlur = 0; 
 
-                // Actualizar físicas y comportamiento
                 s.y += s.speedY;
                 s.x += s.speedX;
 
-                // Hacer que parpadeen de forma dinámica
                 s.alpha += s.pulseSpeed * s.pulseDir;
                 if (s.alpha > 0.9) {
                     s.alpha = 0.9;
@@ -889,13 +986,10 @@
                     s.pulseDir = 1;
                 }
 
-                // Desvanecimiento lento por vida
                 s.alpha -= s.fadeSpeed;
 
-                // Eliminar chispas apagadas o que han salido de la pantalla
                 if (s.y < -10 || s.alpha <= 0) {
                     sparks.splice(i, 1);
-                    // Crear un destello nuevo para que nazca de la nube inferior de gas
                     createSpark(false);
                 }
             }
@@ -919,8 +1013,8 @@
             modalTitle.innerText = title;
             modalStudent.innerText = student;
             
-            // Asignamos la dirección del reproductor optimizado de Google Drive (sin limitaciones)
-            modalIframe.src = `https://drive.google.com/file/d/${videoId}/preview`;
+            // CLAVE: Forzamos la reproducción en calidad Full HD 1080p inyectando los parámetros de calidad vq=hd1080&hd=1&t=2s
+            modalIframe.src = `https://drive.google.com/file/d/${videoId}/preview?vq=hd1080&hd=1&t=2s`;
             
             modal.classList.add('active');
             
@@ -930,7 +1024,7 @@
         }
 
         function closeWarpModal() {
-            modalIframe.src = ""; // Destruimos la conexión para que deje de consumir datos en segundo plano
+            modalIframe.src = ""; 
             modal.classList.remove('active');
             
             if (audioCtx) {
@@ -961,7 +1055,6 @@
             const ctxAudio = getAudioContext();
             if (!ctxAudio) return;
 
-            // Intento dinámico de reanudación si el navegador lo suspendió
             if (ctxAudio.state === 'suspended') {
                 ctxAudio.resume().then(() => {
                     triggerOscillator(ctxAudio, frequency);
@@ -1021,7 +1114,6 @@
             }, 250);
         });
 
-        // --- SISTEMA ROBUSTO DE ACTIVACIÓN DE AUDIO POR INTERACCIÓN DEL USUARIO ---
         const resumeAudio = () => {
             const ctxAudio = getAudioContext();
             if (ctxAudio && ctxAudio.state === 'suspended') {
@@ -1029,7 +1121,6 @@
             }
         };
 
-        // Activadores para desbloquear de forma definitiva el Audio en GitHub Pages
         window.addEventListener('click', resumeAudio);
         window.addEventListener('touchstart', resumeAudio);
         window.addEventListener('mousedown', resumeAudio);
