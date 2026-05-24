@@ -104,6 +104,8 @@
             text-align: center;
             opacity: 0.8;
             text-shadow: 0 0 10px rgba(255, 85, 51, 0.4);
+            transition: color 0.4s ease, text-shadow 0.4s ease;
+            width: 90%;
         }
 
         /* Esquinas HUD estilizadas */
@@ -140,14 +142,14 @@
             animation: radar 2.5s infinite linear;
         }
 
-        /* Transición de carga atmosférica (Efecto entrada en calor Marte) */
+        /* Transición de carga atmosférica */
         .fade-out-overlay {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: #9c311a; /* Rojo marciano para unificar la pantalla al aterrizar */
+            background-color: #9c311a;
             z-index: 10;
             pointer-events: none;
             opacity: 0;
@@ -189,7 +191,8 @@
             SYS_LOC: MA_ORBITAL_S1<br>
             WVP_MATRIX: AUTO_CAL
         </div>
-        <div class="hud-landing-warning">HAZ CLIC EN EL PLANETA PARA ATERRIZAR</div>
+        <!-- El contenedor se inicia vacío para que no aparezca ningún texto inicial -->
+        <div class="hud-landing-warning" id="warning-text"></div>
     </div>
 
     <!-- Canvas de renderizado 3D -->
@@ -277,7 +280,7 @@
 
         for (let i = 0; i < maxShootingStars; i++) {
             const lineGeom = new THREE.BufferGeometry();
-            const pts = new Float32Array(6); // 2 puntos de trayectoria
+            const pts = new Float32Array(6); 
             lineGeom.setAttribute('position', new THREE.BufferAttribute(pts, 3));
             
             const line = new THREE.Line(lineGeom, shootingStarMaterial.clone());
@@ -398,7 +401,7 @@
             return new THREE.CanvasTexture(canvas);
         };
 
-        // Planeta Azul - En la esquina superior derecha respecto a Marte (Fijado y Visible)
+        // Planeta Azul
         const bluePlanetGeometry = new THREE.SphereGeometry(0.28, 32, 32); 
         const bluePlanetMaterial = new THREE.MeshStandardMaterial({
             map: createBluePlanetTexture(),
@@ -411,21 +414,21 @@
         bluePlanet.position.set(5.5, 3.5, -8); 
         scene.add(bluePlanet);
 
-        // Gigante Gaseoso - En la esquina inferior izquierda respecto a Marte (Mucho más lejano)
-        const gasPlanetGeometry = new THREE.SphereGeometry(0.18, 32, 32); // Reducido para simular lejanía extrema
+        // Gigante Gaseoso
+        const gasPlanetGeometry = new THREE.SphereGeometry(0.18, 32, 32); 
         const gasPlanetMaterial = new THREE.MeshStandardMaterial({
             map: createGasGiantTexture(),
             roughness: 0.6,
             metalness: 0.1,
             emissive: new THREE.Color('#66411a'),
-            emissiveIntensity: 1.8 // Ligeramente más luminoso para que resalte al fondo
+            emissiveIntensity: 1.8 
         });
         const gasPlanet = new THREE.Mesh(gasPlanetGeometry, gasPlanetMaterial);
-        gasPlanet.position.set(-18.0, -9.0, -45); // Empujado muy atrás en el eje Z para dar sensación de lejanía infinita
+        gasPlanet.position.set(-18.0, -9.0, -45); 
         scene.add(gasPlanet);
 
 
-        // --- CREACIÓN DE MARTE (SUPERFICIE PERFECTAMENTE SEAMLESS) ---
+        // --- CREACIÓN DE MARTE (SUPERFICIE SEAMLESS) ---
         const planetGeometry = new THREE.SphereGeometry(2.2, 64, 64);
         
         const createSeamlessMarsTexture = () => {
@@ -470,7 +473,7 @@
                 drawSeamlessDetail(x, y, r);
             }
 
-            // [MÁSCARA HORIZONTAL ANTICOSTURA]: Difuminamos los extremos de la textura para que coincidan 100% al unirse
+            // [MÁSCARA HORIZONTAL ANTICOSTURA]
             const edgeGrad = ctx.createLinearGradient(0, 0, width, 0);
             edgeGrad.addColorStop(0, '#9c311a');
             edgeGrad.addColorStop(0.04, 'transparent');
@@ -482,14 +485,14 @@
             ctx.fillRect(0, 0, width, height);
             ctx.restore();
 
-            // Casquete polar norte degradado
+            // Casquete polar norte
             const polarGrad = ctx.createLinearGradient(0, 0, 0, 80);
             polarGrad.addColorStop(0, 'rgba(240, 245, 255, 0.85)');
             polarGrad.addColorStop(1, 'transparent');
             ctx.fillStyle = polarGrad;
             ctx.fillRect(0, 0, width, 80);
 
-            // Casquete polar sur degradado
+            // Casquete polar sur
             const polarSouthGrad = ctx.createLinearGradient(0, height, 0, height - 50);
             polarSouthGrad.addColorStop(0, 'rgba(235, 240, 255, 0.7)');
             polarSouthGrad.addColorStop(1, 'transparent');
@@ -516,7 +519,7 @@
         scene.add(mars);
 
 
-        // --- CAPA DE TORMENTAS DE POLVO ATMOSFÉRICAS ---
+        // --- CAPA DE TORMENTAS DE POLVO ---
         const stormGeometry = new THREE.SphereGeometry(2.215, 64, 64);
 
         const createSeamlessStormTexture = () => {
@@ -620,44 +623,53 @@
         // --- LÓGICA DE COORDENADAS PARA LA MIRA INTERACTIVA ---
         const hintEl = document.getElementById('planet-hint');
         const hudPanel = document.getElementById('hud-panel');
+        const warningText = document.getElementById('warning-text');
         
         let hintX = window.innerWidth / 2;
         let hintY = window.innerHeight / 2;
         let targetHintX = window.innerWidth / 2;
         let targetHintY = window.innerHeight / 2;
         let isHoveringPlanet = false;
+        let systemsArmed = false; 
 
 
         // --- SINTETIZADOR DE MÚSICA Y AMBIENTE DE NAVE ESPACIAL (WEB AUDIO API) ---
         let audioCtx = null;
         let masterGain = null;
+        let musicStarted = false;
+
+        function getAudioContext() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            return audioCtx;
+        }
 
         function startSpaceMusic() {
-            if (audioCtx) return; 
+            if (musicStarted) return; 
 
-            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            masterGain = audioCtx.createGain();
-            masterGain.gain.setValueAtTime(0.0, audioCtx.currentTime);
-            masterGain.gain.linearRampToValueAtTime(0.25, audioCtx.currentTime + 2.5);
-            masterGain.connect(audioCtx.destination);
+            const ctxAudio = getAudioContext();
+            masterGain = ctxAudio.createGain();
+            masterGain.gain.setValueAtTime(0.0, ctxAudio.currentTime);
+            masterGain.gain.linearRampToValueAtTime(0.25, ctxAudio.currentTime + 2.5);
+            masterGain.connect(ctxAudio.destination);
 
-            // 1. Zumbido de cabina / Motores auxiliares (Spaceship Rumble & Hum) - GRAVES REBAJADOS
-            const engineOsc = audioCtx.createOscillator();
-            const cabinOsc = audioCtx.createOscillator();
-            const cabinFilter = audioCtx.createBiquadFilter();
+            // 1. Zumbido de cabina / Motores auxiliares
+            const engineOsc = ctxAudio.createOscillator();
+            const cabinOsc = ctxAudio.createOscillator();
+            const cabinFilter = ctxAudio.createBiquadFilter();
 
             engineOsc.type = 'triangle';
-            engineOsc.frequency.setValueAtTime(38.0, audioCtx.currentTime); // 38Hz (vibración sutil)
+            engineOsc.frequency.setValueAtTime(38.0, ctxAudio.currentTime); 
 
             cabinOsc.type = 'sawtooth';
-            cabinOsc.frequency.setValueAtTime(80.0, audioCtx.currentTime); // Frecuencia de base atenuada
+            cabinOsc.frequency.setValueAtTime(80.0, ctxAudio.currentTime); 
 
             cabinFilter.type = 'lowpass';
-            cabinFilter.frequency.setValueAtTime(95, audioCtx.currentTime); 
+            cabinFilter.frequency.setValueAtTime(95, ctxAudio.currentTime); 
 
-            // Nodo de ganancia de motores - Calibrado súper sutil para que no sea intrusivo
-            const engineGain = audioCtx.createGain();
-            engineGain.gain.setValueAtTime(0.06, audioCtx.currentTime); // Rebajado a la mitad para evitar excesos graves
+            const engineGain = ctxAudio.createGain();
+            engineGain.gain.setValueAtTime(0.06, ctxAudio.currentTime); 
 
             engineOsc.connect(cabinFilter);
             cabinOsc.connect(cabinFilter);
@@ -667,47 +679,45 @@
             engineOsc.start();
             cabinOsc.start();
 
-            // 2. Ruido blanco filtrado (Flujo de aire de soporte vital) - CALIBRADO ALTAMENTE SUTIL (0.08)
-            const bufferSize = audioCtx.sampleRate * 2;
-            const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+            // 2. Ruido blanco filtrado (Flujo de aire)
+            const bufferSize = ctxAudio.sampleRate * 2;
+            const noiseBuffer = ctxAudio.createBuffer(1, bufferSize, ctxAudio.sampleRate);
             const output = noiseBuffer.getChannelData(0);
             for (let i = 0; i < bufferSize; i++) {
                 output[i] = Math.random() * 2 - 1;
             }
-            const whiteNoise = audioCtx.createBufferSource();
+            const whiteNoise = ctxAudio.createBufferSource();
             whiteNoise.buffer = noiseBuffer;
             whiteNoise.loop = true;
 
-            const airFilter = audioCtx.createBiquadFilter();
+            const airFilter = ctxAudio.createBiquadFilter();
             airFilter.type = 'bandpass';
-            airFilter.frequency.setValueAtTime(260, audioCtx.currentTime);
-            airFilter.Q.setValueAtTime(1.1, audioCtx.currentTime);
+            airFilter.frequency.setValueAtTime(260, ctxAudio.currentTime);
+            airFilter.Q.setValueAtTime(1.1, ctxAudio.currentTime);
 
-            const airGain = audioCtx.createGain();
-            // Ruido de fondo sutil y de baja intensidad (0.08)
-            airGain.gain.setValueAtTime(0.08, audioCtx.currentTime); 
+            const airGain = ctxAudio.createGain();
+            airGain.gain.setValueAtTime(0.08, ctxAudio.currentTime); 
 
             whiteNoise.connect(airFilter);
             airFilter.connect(airGain);
             airGain.connect(masterGain);
             whiteNoise.start();
 
-            // 3. Drone cósmico de fondo profundo - ATENUADO EN GRAVES
-            const baseDrone = audioCtx.createOscillator();
-            const droneFilter = audioCtx.createBiquadFilter();
+            // 3. Drone cósmico modulado
+            const baseDrone = ctxAudio.createOscillator();
+            const droneFilter = ctxAudio.createBiquadFilter();
 
             baseDrone.type = 'sine';
-            baseDrone.frequency.setValueAtTime(110.0, audioCtx.currentTime); 
+            baseDrone.frequency.setValueAtTime(110.0, ctxAudio.currentTime); 
 
             droneFilter.type = 'lowpass';
-            droneFilter.frequency.setValueAtTime(130, audioCtx.currentTime);
+            droneFilter.frequency.setValueAtTime(130, ctxAudio.currentTime);
 
-            const droneGain = audioCtx.createGain();
-            droneGain.gain.setValueAtTime(0.12, audioCtx.currentTime); // Equilibrio de fondo impecable
+            const droneGain = ctxAudio.createGain();
+            droneGain.gain.setValueAtTime(0.12, ctxAudio.currentTime); 
 
-            // Modulación de ciclo muy lento (LFO)
-            const lfo = audioCtx.createOscillator();
-            const lfoGain = audioCtx.createGain();
+            const lfo = ctxAudio.createOscillator();
+            const lfoGain = ctxAudio.createGain();
             lfo.frequency.value = 0.05; 
             lfoGain.gain.value = 50;
 
@@ -725,35 +735,34 @@
             function playConsoleTelemetry() {
                 if (isTransitioning) return; 
 
-                const pingOsc = audioCtx.createOscillator();
-                const pingGain = audioCtx.createGain();
+                const pingOsc = ctxAudio.createOscillator();
+                const pingGain = ctxAudio.createGain();
 
                 const isClick = Math.random() > 0.6;
                 pingOsc.type = 'sine';
                 
                 if (isClick) {
-                    pingOsc.frequency.setValueAtTime(135, audioCtx.currentTime);
-                    pingGain.gain.setValueAtTime(0.0, audioCtx.currentTime);
-                    pingGain.gain.linearRampToValueAtTime(0.06, audioCtx.currentTime + 0.01); 
-                    pingGain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.08);
+                    pingOsc.frequency.setValueAtTime(135, ctxAudio.currentTime);
+                    pingGain.gain.setValueAtTime(0.0, ctxAudio.currentTime);
+                    pingGain.gain.linearRampToValueAtTime(0.06, ctxAudio.currentTime + 0.01); 
+                    pingGain.gain.exponentialRampToValueAtTime(0.0001, ctxAudio.currentTime + 0.08);
                 } else {
                     const freqs = [1800, 2200, 2500, 2900, 3200];
                     const randomFreq = freqs[Math.floor(Math.random() * freqs.length)];
-                    pingOsc.frequency.setValueAtTime(randomFreq, audioCtx.currentTime);
+                    pingOsc.frequency.setValueAtTime(randomFreq, ctxAudio.currentTime);
                     
-                    pingGain.gain.setValueAtTime(0.0, audioCtx.currentTime);
-                    pingGain.gain.linearRampToValueAtTime(0.02, audioCtx.currentTime + 0.02); 
-                    pingGain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.4);
+                    pingGain.gain.setValueAtTime(0.0, ctxAudio.currentTime);
+                    pingGain.gain.linearRampToValueAtTime(0.02, ctxAudio.currentTime + 0.02); 
+                    pingGain.gain.exponentialRampToValueAtTime(0.0001, ctxAudio.currentTime + 0.4);
                 }
 
                 pingOsc.connect(pingGain);
                 pingGain.connect(masterGain);
 
                 pingOsc.start();
-                pingOsc.stop(audioCtx.currentTime + 0.5);
+                pingOsc.stop(ctxAudio.currentTime + 0.5);
             }
 
-            // Intervalo activo de telemetría (cada 2.2 segundos)
             setInterval(() => {
                 const repetitions = Math.floor(Math.random() * 4) + 1; 
                 for (let i = 0; i < repetitions; i++) {
@@ -761,36 +770,60 @@
                 }
             }, 2200);
 
-            // 5. Destellos armónicos de nebulosas lejanas (Ecos espaciales)
+            // 5. Destellos armónicos
             const notes = [440, 493.88, 554.37, 659.25, 739.99, 880]; 
 
             function playSpaceSparkle() {
                 if (isTransitioning) return; 
 
-                const sparkleOsc = audioCtx.createOscillator();
-                const sparkleGain = audioCtx.createGain();
-                const sparkleFilter = audioCtx.createBiquadFilter();
+                const sparkleOsc = ctxAudio.createOscillator();
+                const sparkleGain = ctxAudio.createGain();
+                const sparkleFilter = ctxAudio.createBiquadFilter();
 
                 sparkleOsc.type = 'sine';
                 const randomNote = notes[Math.floor(Math.random() * notes.length)] * 2;
-                sparkleOsc.frequency.setValueAtTime(randomNote, audioCtx.currentTime);
+                sparkleOsc.frequency.setValueAtTime(randomNote, ctxAudio.currentTime);
 
                 sparkleFilter.type = 'bandpass';
-                sparkleFilter.frequency.setValueAtTime(1200, audioCtx.currentTime);
+                sparkleFilter.frequency.setValueAtTime(1200, ctxAudio.currentTime);
 
-                sparkleGain.gain.setValueAtTime(0.0, audioCtx.currentTime);
-                sparkleGain.gain.linearRampToValueAtTime(0.03, audioCtx.currentTime + 1.5); 
-                sparkleGain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 6.0); 
+                sparkleGain.gain.setValueAtTime(0.0, ctxAudio.currentTime);
+                sparkleGain.gain.linearRampToValueAtTime(0.03, ctxAudio.currentTime + 1.5); 
+                sparkleGain.gain.exponentialRampToValueAtTime(0.0001, ctxAudio.currentTime + 6.0); 
 
                 sparkleOsc.connect(sparkleFilter);
                 sparkleFilter.connect(sparkleGain);
                 sparkleGain.connect(masterGain);
 
                 sparkleOsc.start();
-                sparkleOsc.stop(audioCtx.currentTime + 6.1);
+                sparkleOsc.stop(ctxAudio.currentTime + 6.1);
             }
 
             setInterval(playSpaceSparkle, 4200);
+
+            musicStarted = true;
+        }
+
+        // --- REPRODUCCIÓN FÍSICA DE BIP DE INTERFAZ ---
+        function playClickSound() {
+            const ctxAudio = getAudioContext();
+            if (!ctxAudio) return;
+
+            const osc = ctxAudio.createOscillator();
+            const gainNode = ctxAudio.createGain();
+
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(580, ctxAudio.currentTime); 
+
+            gainNode.gain.setValueAtTime(0.0, ctxAudio.currentTime);
+            gainNode.gain.linearRampToValueAtTime(0.05, ctxAudio.currentTime + 0.01);
+            gainNode.gain.exponentialRampToValueAtTime(0.0001, ctxAudio.currentTime + 0.25);
+
+            osc.connect(gainNode);
+            gainNode.connect(ctxAudio.destination);
+
+            osc.start();
+            osc.stop(ctxAudio.currentTime + 0.3);
         }
 
         // --- BUCLE DE ANIMACIÓN (LOOP) ---
@@ -798,7 +831,7 @@
             requestAnimationFrame(animate);
 
             if (!isTransitioning) {
-                // Rotaciones autónomas normales de los astros
+                // Rotaciones
                 mars.rotation.y += 0.0016;
                 stormLayer.rotation.y -= 0.0028;
                 stormLayer.rotation.x = Math.sin(Date.now() * 0.0001) * 0.03;
@@ -809,12 +842,11 @@
                 gasPlanet.rotation.y -= 0.0009;
                 starField.rotation.y += 0.00008;
 
-                // Animación de estrellas fugaces activas
+                // Estrellas fugaces
                 shootingStars.forEach(s => {
                     if (s.active) {
                         s.progress += s.speed;
                         
-                        // Actualizar coordenadas de línea de estela
                         const x = THREE.MathUtils.lerp(s.startX, s.endX, s.progress);
                         const y = THREE.MathUtils.lerp(s.startY, s.endY, s.progress);
                         const z = THREE.MathUtils.lerp(s.startZ, s.endZ, s.progress);
@@ -829,7 +861,6 @@
                         positions[3] = x;  positions[4] = y;  positions[5] = z;
                         s.mesh.geometry.attributes.position.needsUpdate = true;
 
-                        // Desvanecimiento al final del viaje
                         if (s.progress >= 1.0) {
                             s.mesh.material.opacity -= 0.08;
                             if (s.mesh.material.opacity <= 0) {
@@ -839,17 +870,15 @@
                     }
                 });
 
-                // Animación de cometa sutil
+                // Cometa
                 if (cometData.active) {
                     cometData.x += cometData.dx;
                     cometData.y += cometData.dy;
                     cometData.z += cometData.dz;
 
-                    // Desplazar estela
                     cometData.trail.unshift(new THREE.Vector3(cometData.x, cometData.y, cometData.z));
                     cometData.trail.pop();
 
-                    // Re-renderizado de nodos
                     const positions = cometLine.geometry.attributes.position.array;
                     for(let i = 0; i < 15; i++) {
                         positions[i*3] = cometData.trail[i].x;
@@ -858,7 +887,6 @@
                     }
                     cometLine.geometry.attributes.position.needsUpdate = true;
 
-                    // Finalización orbital
                     if (cometData.x < -45) {
                         cometData.active = false;
                         cometMaterial.opacity = 0;
@@ -866,23 +894,18 @@
                 }
 
                 if (!introFinished) {
-                    // ACERCAMIENTO PAUSADO CINEMÁTICO
                     camera.position.z = THREE.MathUtils.lerp(camera.position.z, targetZ, speedFactor);
                     mars.rotation.y += (targetZ / camera.position.z) * 0.003;
 
                     if (Math.abs(camera.position.z - targetZ) < 0.05) {
                         camera.position.z = targetZ;
                         introFinished = true;
-                        
-                        // Mostramos la mira circular suavemente al frenar
                         hintEl.style.opacity = '1';
                     }
                 } else {
-                    // REACCIÓN AL CURSOR DEL RATÓN (Inclinación de Marte)
                     mars.rotation.x = THREE.MathUtils.lerp(mars.rotation.x, targetRotation.y * 0.12, 0.05);
                     stormLayer.rotation.x = THREE.MathUtils.lerp(stormLayer.rotation.x, targetRotation.y * 0.12, 0.05);
 
-                    // CONTROL INTERACTIVO DE LA MIRA DE ATERRIZAJE
                     raycaster.setFromCamera(mouse, camera);
                     const intersects = raycaster.intersectObjects([mars, stormLayer]);
 
@@ -904,25 +927,19 @@
                     hintEl.style.top = `${hintY}px`;
                 }
             } else {
-                // --- EFECTO VELOCIDAD DE LA LUZ CON ENTRADA ATMOSFÉRICA ---
                 warpSpeed += 0.06; 
 
-                // 1. Distorsión de lente (Efecto túnel warp)
                 camera.fov = THREE.MathUtils.lerp(camera.fov, 140, 0.08);
                 camera.updateProjectionMatrix();
 
-                // 2. Desplazamiento de cámara limitando la inmersión justo al ras del planeta (evita traspasarlo)
                 camera.position.z = Math.max(2.22, camera.position.z - warpSpeed);
 
-                // 3. Incremento volumétrico masivo de niebla roja de Marte
                 scene.fog.color.setHex(0x9c311a);
                 scene.fog.density = THREE.MathUtils.lerp(scene.fog.density, 1.6, 0.08);
 
-                // 4. Giro acelerado de fricción térmica
                 mars.rotation.y += 0.15;
                 stormLayer.rotation.y -= 0.18;
 
-                // 5. Estiramiento dinámico de las estrellas
                 const positions = starField.geometry.attributes.position.array;
                 for (let i = 2; i < positions.length; i += 3) {
                     positions[i] += warpSpeed * 6.0; 
@@ -951,24 +968,28 @@
             targetHintY = event.clientY;
         });
 
-        // Intentar arrancar la música en cuanto el cursor se mueva sobre el documento para iniciar de inmediato
-        window.addEventListener('mouseover', () => {
-            if (!audioCtx) {
-                startSpaceMusic();
-            } else if (audioCtx.state === 'suspended') {
-                audioCtx.resume();
-            }
-        });
-
-        // Evento click unificado: inicia la música de fondo e interactúa con el planeta
+        // Evento click unificado de doble fase (Armar sistemas / Iniciar viaje)
         window.addEventListener('click', (event) => {
-            // Inicializar o reanudar el contexto de audio en la primera interacción de clic
-            if (!audioCtx) {
+            // Fase 1: Primer Clic para armar sistemas de audio y cabina
+            if (!systemsArmed) {
+                const ctxAudio = getAudioContext();
+                if (ctxAudio.state === 'suspended') {
+                    ctxAudio.resume();
+                }
                 startSpaceMusic();
-            } else if (audioCtx.state === 'suspended') {
-                audioCtx.resume();
+                systemsArmed = true;
+                
+                // Pitido físico táctico al hacer clic
+                playClickSound();
+                
+                // Generación dinámica y exclusiva del texto tras el primer clic
+                warningText.innerHTML = "todo preparado para aterrizar";
+                warningText.style.color = "#ff5533";
+                warningText.style.textShadow = "0 0 12px rgba(255, 85, 51, 0.8)";
+                return; 
             }
 
+            // Fase 2: Segundo clic - Validación del aterrizaje
             if (!introFinished || isTransitioning) return;
 
             mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
@@ -980,16 +1001,18 @@
             if (intersects.length > 0) {
                 isTransitioning = true;
 
+                // Pitido físico de confirmación de aterrizaje
+                playClickSound();
+
                 // Apagamos la mira telescópica y el panel HUD
                 hintEl.style.opacity = '0';
                 hudPanel.style.opacity = '0';
 
-                // Desvanecimiento suave de volumen de la música sincronizado con la aceleración (0.8s)
+                // Desvanecimiento de volumen
                 if (masterGain) {
                     masterGain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.8);
                 }
 
-                // Transición cromática de atmósfera de Marte
                 document.getElementById('transition-overlay').style.opacity = '1';
 
                 setTimeout(() => {
@@ -1011,4 +1034,3 @@
     </script>
 </body>
 </html>
-</ht
