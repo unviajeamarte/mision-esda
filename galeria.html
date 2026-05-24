@@ -38,7 +38,7 @@
             flex-direction: column;
         }
 
-        /* Fondo dinámico de gas vaporoso de aterrizaje */
+        /* Fondo dinámico de gas vaporoso de aterrizaje y destellos */
         #gas-background {
             position: fixed;
             top: 0;
@@ -262,12 +262,15 @@
             height: 20px;
         }
 
-        /* --- CONTENEDOR DE VISTA PREVIA (DISEÑO TELEMETRÍA HUD) --- */
+        /* --- CONTENEDOR DE VISTA PREVIA CON MINIATURA DE GOOGLE DRIVE --- */
         .video-box {
             position: relative;
             width: 100%;
             padding-top: 56.25%; /* Relación de aspecto 16:9 */
             background-color: #0b0507;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
             border-radius: 6px;
             overflow: hidden;
             margin-bottom: 20px;
@@ -276,6 +279,27 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        /* Suave zoom out e iluminación de la miniatura al hacer hover */
+        .video-box::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: inherit;
+            background-size: cover;
+            background-position: center;
+            transition: transform 0.5s ease, filter 0.3s ease;
+            z-index: 0;
+        }
+
+        .video-box:hover::before {
+            transform: scale(1.06);
+            filter: brightness(1.1);
         }
 
         /* Rejilla técnica de fondo en el placeholder */
@@ -286,48 +310,53 @@
             width: 100%;
             height: 100%;
             background-image: 
-                linear-gradient(rgba(255, 85, 51, 0.05) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255, 85, 51, 0.05) 1px, transparent 1px);
+                linear-gradient(rgba(255, 85, 51, 0.08) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 85, 51, 0.08) 1px, transparent 1px);
             background-size: 20px 20px;
             background-position: center;
             z-index: 1;
+            pointer-events: none;
         }
 
         /* Ondas e iconos estéticos de la interfaz de telemetría de Marte */
         .hud-telemetry-decor {
             position: absolute;
-            width: 80%;
-            height: 60%;
-            border: 1px dashed rgba(255, 85, 51, 0.15);
+            width: 84%;
+            height: 68%;
+            border: 1px dashed rgba(255, 85, 51, 0.2);
             border-radius: 4px;
-            top: 20%;
-            left: 10%;
+            top: 16%;
+            left: 8%;
             z-index: 1;
             display: flex;
             align-items: center;
             justify-content: center;
+            pointer-events: none;
         }
 
         .hud-telemetry-decor::before {
-            content: 'SYSTEM ONLINE // FEED 16:9';
+            content: 'SYSTEM ONLINE // FEED 1080P';
             position: absolute;
-            top: 5px;
+            top: 6px;
             left: 8px;
             font-family: 'Montserrat', sans-serif;
-            font-size: 6px;
-            color: rgba(255, 85, 51, 0.4);
-            letter-spacing: 1px;
+            font-size: 7px;
+            color: rgba(255, 85, 51, 0.6);
+            letter-spacing: 1.5px;
+            font-weight: 700;
         }
 
         .hud-telemetry-decor::after {
             content: 'REC •';
             position: absolute;
-            top: 5px;
+            top: 6px;
             right: 8px;
             font-family: 'Montserrat', sans-serif;
-            font-size: 6px;
+            font-size: 8px;
             color: var(--color-mars);
-            letter-spacing: 1px;
+            letter-spacing: 1.5px;
+            font-weight: 900;
+            text-shadow: 0 0 5px rgba(255, 85, 51, 0.8);
             animation: blink 1.5s infinite;
         }
 
@@ -342,7 +371,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(6, 2, 3, 0.5);
+            background: rgba(6, 2, 3, 0.45);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -351,7 +380,7 @@
         }
 
         .video-box:hover .video-overlay {
-            background: rgba(255, 85, 51, 0.1);
+            background: rgba(255, 85, 51, 0.05);
         }
 
         .play-button {
@@ -429,7 +458,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            font-size: 0.5rem;
+            font-size: 0.8rem;
             color: #6a7c91;
             text-transform: uppercase;
             letter-spacing: 1px;
@@ -575,7 +604,7 @@
 
         footer p {
             font-family: 'Montserrat', sans-serif;
-            font-size: 0.5rem;
+            font-size: 0.85rem;
             color: #6a7c91;
             letter-spacing: 3px;
             font-weight: 400; /* No está en negrita, manteniendo un estilo sofisticado */
@@ -602,13 +631,13 @@
             </a>
         </div>
 
-        <p class="hud-subtitle">Misión de Reconocimiento: Marte</p>
+        <p class="hud-subtitle">Misiones de Reconocimiento</p>
         <h1>Escenas marcianas</h1>
         <div class="hud-line"></div>
         <p class="edition-tag">Proyectos realizados por los Alumnos de 2º de Diseño Gráfico</p>
         
         <!-- Descripción del proyecto añadida en minúsculas -->
-        <p class="hud-description">Desde la asignatura de Medios Informáticos II, e inspirados en el concepto del DiseñaFest’26, se solicita a los alumnos recrear una escena en Marte. Con total libertad creativa, y después de todo el desarrollo del proyecto (ADD) en Blender, diseñarán un breve teaser promocional del festival.</p>
+        <p class="hud-description">Desde la asignatura de Medios Informáticos II, e inspirados en el concepto del DiseñaFest’26, se invita a los alumnos a recrear una escena en Marte. Con total libertad creativa, y después de todo el desarrollo del proyecto (ADD) en Blender, diseñarán un breve teaser promocional del festival. Aquí se puede ver una muestra.</p>
 
         <!-- Retorno al Index 3D (Botón circular con icono de nave despegando) -->
         <a href="index.html" class="btn-return" id="btn-back" title="Volver a la Nave / Landing">
@@ -639,7 +668,7 @@
         <div class="modal-content">
             <button class="modal-close" id="modal-close">Cerrar [X]</button>
             <div class="modal-video-wrapper">
-                <!-- Usamos un iframe dinámico para reproducir el reproductor nativo de Google Drive libre de restricciones -->
+                <!-- Iframe dinámico para reproducir el reproductor nativo de Google Drive libre de restricciones -->
                 <iframe id="modal-iframe" allow="autoplay; encrypted-media" allowfullscreen></iframe>
             </div>
             <div class="modal-info-box">
@@ -657,7 +686,7 @@
     <!-- SCRIPT DE EFECTOS VISUALES Y SONOROS (WEB AUDIO API) -->
     <script>
         // --- 1. BANCO DE DATOS DE LOS 30 PROYECTOS CON TU NUEVO ID EN EL PROYECTO 1 ---
-           const proyectos = [
+        const proyectos = [
             { id: 1, student: "Alejandro Bellosta", title: "Sonda Robotizada de Superficie", desc: "Modelado industrial (Hard-Surface) y ensamblado mecánico de un vehículo robotizado autónomo de exploración. Animación por armadura (rigging) para el comportamiento de las orugas articuladas.", class: "2º DG", group: "Grupo B", videoId: "1oi6maskOayEdoypr17dYPJaWJ242s_3R" },
             { id: 2, student: "Ana María Cojocaru", title: "Invernadero Hidropónico Autosuficiente", desc: "Propuesta arquitectónica de domos geodésicos translúcidos para el cultivo y soporte vital de la primera colonia. Destaca por el tratamiento de sombreadores y materiales de cristal orgánico.", class: "2º DG", group: "Grupo A", videoId: "1_o3rRorMyD7v9B7T3U66y78" },
             { id: 3, student: "Aitana García", title: "Módulo de Aterrizaje Atmosférico", desc: "Reconstrucción tridimensional de un transbordador de descenso tripulado. Se ha desarrollado una física de partículas para simular el fuego de propulsión de los retrocohetes térmicos.", class: "2º DG", group: "Grupo B", videoId: "1_o3rRorMyD7v9B7T3U66y78" },
@@ -681,8 +710,7 @@
             { id: 21, student: "Sara Tejeda", title: "Estación de Carga de Rovers", desc: "Plataforma de abastecimiento energético automatizado por inducción. Iluminación interactiva de recarga de batería mediante nodos.", class: "2º DG", group: "Grupo A", videoId: "1_o3rRorMyD7v9B7T3U66y78" },
             { id: 22, student: "Isabel Calvo / Tomás Ferrer", title: "Módulo de Exploración Volcánica", desc: "Sonda robótica todoterreno adaptada a la caldera del Monte Olimpo. Chasis de titanio blindado con desgaste por microimpactos.", class: "2º DG", group: "Grupo 11", videoId: "1_o3rRorMyD7v9B7T3U66y78" },
             { id: 23, student: "Manuel Delgado / Laura Cano", title: "Silo Agrícola Automatizado", desc: "Instalación de almacenamiento de cereales y vegetales cultivados en el domo. Rigging de cintas transportadoras y brazos clasificadores.", class: "2º DG", group: "Grupo 12", videoId: "1_o3rRorMyD7v9B7T3U66y78" },
-            { id: 24, student: "Santiago Cruz / Miriam Esteban", title: "Colector Solar Parabólico", desc: "Matriz de espejos cóncavos autoguiados para la captación solar térmica concentrada. Animación de seguimiento solar procedural.", class: "2º DG", group: "Grupo 12", videoId: "1_o3rRorMyD7v9B7T3U66y78" },
-
+            { id: 24, student: "Santiago Cruz / Miriam Esteban", title: "Colector Solar Parabólico", desc: "Matriz de espejos cóncavos autoguiados para la captación solar térmica concentrada. Animación de seguimiento solar procedural.", class: "2º DG", group: "Grupo 12", videoId: "1_o3rRorMyD7v9B7T3U66y78" }
         ];
 
         // --- 2. RENDERIZADO PROCEDIMENTAL DE LAS TARJETAS ---
@@ -691,9 +719,10 @@
         proyectos.forEach(p => {
             const card = document.createElement('section');
             card.className = 'project-card';
+            // Inyectamos la miniatura como propiedad background-image inline en .video-box de forma dinámica
             card.innerHTML = `
                 <div>
-                    <div class="video-box">
+                    <div class="video-box" style="background-image: url('https://drive.google.com/thumbnail?id=${p.videoId}&sz=w600');">
                         <div class="video-box-grid"></div>
                         <div class="hud-telemetry-decor"></div>
                         <div class="video-overlay">
@@ -738,12 +767,14 @@
         });
 
 
-        // --- 3. FONDO DE GAS DE ATERRIZAJE FLUIDO ULTRA VAPOROSO (CANVAS 2D) ---
+        // --- 3. FONDO DE GAS DE ATERRIZAJE FLUIDO Y DESTELLOS ASCENDENTES (CANVAS 2D) ---
         const canvas = document.getElementById('gas-background');
         const ctx = canvas.getContext('2d');
 
         let gasClouds = [];
+        let sparks = []; // Array para los nuevos destellos o chispas
         const numClouds = 26; 
+        const maxSparks = 60; // Cantidad máxima de destellos flotando de forma simultánea
 
         function resizeCanvas() {
             canvas.width = window.innerWidth;
@@ -753,6 +784,8 @@
 
         function initGas() {
             gasClouds = [];
+            sparks = [];
+            // Inicializar las nubes gaseosas
             for (let i = 0; i < numClouds; i++) {
                 gasClouds.push({
                     x: Math.random() * canvas.width,
@@ -764,12 +797,37 @@
                     color: Math.random() > 0.4 ? 'rgba(235, 110, 50, ' : 'rgba(215, 80, 30, '
                 });
             }
+            // Generar destellos iniciales
+            for (let i = 0; i < maxSparks; i++) {
+                createSpark(true);
+            }
+        }
+
+        // Crear una chispa o destello dinámico con escalas exponenciales para simular profundidad (No uniformes)
+        function createSpark(randomY = false) {
+            // Curva exponencial (cúbica) para que haya muchos muy diminutos al fondo y pocos grandes en primer plano
+            const size = 0.3 + Math.pow(Math.random(), 3.5) * 4.2;
+            sparks.push({
+                x: Math.random() * canvas.width,
+                // Si es al inicio, se reparten por toda la pantalla. Si no, nacen de la nube abajo
+                y: randomY ? Math.random() * canvas.height : canvas.height + 10 + Math.random() * 30,
+                size: size,
+                alpha: 0.1 + Math.random() * 0.8,
+                fadeSpeed: 0.001 + Math.random() * 0.005,
+                speedY: -(0.3 + (4.5 - size) * 0.15 + Math.random() * 0.4), // Sensación de paralaje por velocidad inversa al tamaño
+                speedX: (Math.random() - 0.5) * 0.3, // Suave oscilación lateral
+                pulseSpeed: 0.03 + Math.random() * 0.07, // Velocidad de parpadeo (brillo)
+                pulseDir: Math.random() > 0.5 ? 1 : -1,
+                color: Math.random() > 0.25 ? 'rgba(255, 85, 51, ' : 'rgba(255, 180, 110, ' // Naranjas y dorados
+            });
         }
 
         function drawGas() {
+            // Fondo oscuro base
             ctx.fillStyle = '#060204'; 
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+            // Gradiente ambiental marciano sutil desde el fondo
             const baseGrad = ctx.createLinearGradient(0, canvas.height, 0, 0);
             baseGrad.addColorStop(0, 'rgba(180, 55, 20, 0.15)');
             baseGrad.addColorStop(0.5, 'rgba(235, 110, 50, 0.05)');
@@ -777,6 +835,7 @@
             ctx.fillStyle = baseGrad;
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+            // 1. Renderizar nubes gaseosas flotantes
             for (let i = 0; i < gasClouds.length; i++) {
                 const gc = gasClouds[i];
                 
@@ -790,9 +849,11 @@
                 ctx.arc(gc.x, gc.y, gc.radius, 0, Math.PI * 2);
                 ctx.fill();
 
+                // Actualizar posiciones de las nubes gaseosas
                 gc.y += gc.speedY;
                 gc.x += gc.speedX;
 
+                // Reutilizar nubes que salen por la parte superior
                 if (gc.y + gc.radius < 0) {
                     gc.y = canvas.height + gc.radius;
                     gc.x = Math.random() * canvas.width;
@@ -800,6 +861,45 @@
                     gc.opacity = 0.03 + Math.random() * 0.06;
                 }
             }
+
+            // 2. Renderizar y actualizar pequeños destellos flotantes (chispas)
+            for (let i = sparks.length - 1; i >= 0; i--) {
+                const s = sparks[i];
+
+                // Dibujar destello individual (pequeño círculo brillante con halo sutil)
+                ctx.beginPath();
+                ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+                ctx.fillStyle = `${s.color}${s.alpha})`;
+                ctx.shadowColor = '#ff5533';
+                ctx.shadowBlur = s.size * 2.5; // Brillo HUD de plasma proporcional al tamaño
+                ctx.fill();
+                ctx.shadowBlur = 0; // Resetear sombra para optimización
+
+                // Actualizar físicas y comportamiento
+                s.y += s.speedY;
+                s.x += s.speedX;
+
+                // Hacer que parpadeen de forma dinámica
+                s.alpha += s.pulseSpeed * s.pulseDir;
+                if (s.alpha > 0.9) {
+                    s.alpha = 0.9;
+                    s.pulseDir = -1;
+                } else if (s.alpha < 0.15) {
+                    s.alpha = 0.15;
+                    s.pulseDir = 1;
+                }
+
+                // Desvanecimiento lento por vida
+                s.alpha -= s.fadeSpeed;
+
+                // Eliminar chispas apagadas o que han salido de la pantalla
+                if (s.y < -10 || s.alpha <= 0) {
+                    sparks.splice(i, 1);
+                    // Crear un destello nuevo para que nazca de la nube inferior de gas
+                    createSpark(false);
+                }
+            }
+
             requestAnimationFrame(drawGas);
         }
 
